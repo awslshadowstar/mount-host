@@ -2,7 +2,7 @@ package mountEscape
 
 var DefaultMountPath = "/host-shadow-fs"
 
-func MountHost() error {
+func MountHost() (err error) {
 	deviceList, err := GetDeviceList()
 	if err != nil {
 		return err
@@ -19,19 +19,20 @@ func MountHost() error {
 		}
 	}
 
-	if err := Mkdir(DefaultMountPath); err != nil {
-		return err
+	if err = Mkdir(DefaultMountPath); err != nil {
+		return
 	}
-	defer RemoveDir(DefaultMountPath)
+	defer func() {
+		err = RemoveDir(DefaultMountPath)
+	}()
 
-	if err := DoMount("/dev/"+hostDevice, DefaultMountPath, fsType); err != nil {
-		return err
+	if err = DoMount("/dev/"+hostDevice, DefaultMountPath, fsType); err != nil {
+		return
 	}
 	defer Umount(DefaultMountPath)
 
-	if err := Chroot(DefaultMountPath); err != nil {
-		return err
+	if err = Chroot(DefaultMountPath); err != nil {
+		return
 	}
-
 	return nil
 }
